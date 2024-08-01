@@ -9,14 +9,29 @@
             
             $("#"+div+"_div").show();
         }
+        function submitForm(f, pet) {
+            var form = $("#"+f+"_pet_form");
+            var petID = $("#"+f+"_pet_id");
+            
+            petID.val(pet);
+            
+            if (f == 'search') {
+                $("#find_type_id").click();
+                $("#is_editing").val("1");
+            }
+            
+            form.submit();
+            
+        }
     </script>
 @endsection
 
 @section('content')
 
     @if( !empty($petID) )
-        <p><strong>Pet added - ID: {{ $petID }}</strong></p>
+        <p><strong>Pet {{ $type ?? 'edited' }} - ID: {{ $petID }}</strong></p>
     @endif
+    
     <button onclick="showForm('add')">Add</button> | <button onclick="showForm('find')">Find</button>
     
     <div id="add_div" style="display: none">
@@ -54,17 +69,18 @@
     
         <h3>Find Pet</h3>
         
-        <form id="add_pet_form" method="post" action="/pets/find">@csrf
+        <form id="search_pet_form" method="post" action="/pets/find">@csrf
         
-            <input type="radio" id="find_type1" name="find_type" value="status" /> 
+            <input type="radio" id="find_type_status" name="find_type" value="status" /> 
             Status: <select name="search_status_id">
                     @foreach($statuses as $key => $status)
                     <option value="{{ $key }}">{{ $status }}</option>
                     @endforeach
                 </select><br />
                 
-            <input type="radio" id="find_type2" name="find_type" value="id" /> 
+            <input type="radio" id="find_type_id" name="find_type" value="id" /> 
             <input type="text" id="search_pet_id" name="search_pet_id" value="" placeholder="Pet ID" /> <br />
+            <input type="hidden" id="is_editing" name="is_editing" value="0" />
             
             <br />
             <input type="submit" value="Search" />
@@ -74,14 +90,33 @@
     <div id="fetched_div">
     
     @if( !empty($fetched_data) )
-        @for ( $i=0; $i<count($fetched_data); $i++ )
+        @if( $fetched_data == '')
+            <p>No data</p>
+        @else
         
-            @if ( $i>(count($fetched_data)-10) )
+            @for ( $i=0; $i<count($fetched_data); $i++ )
+        
+                @if ( $i>(count($fetched_data)-10) )
                 
-        {{ $fetched_data[$i]->id }} . {{ $fetched_data[$i]->name }}<br />
+        {{ $fetched_data[$i]->id }} . {{ $fetched_data[$i]->name }}
+        <button onclick="submitForm('search', '{{ $fetched_data[$i]->id }}')" >Edit</button> &nbsp; 
+        <button onclick="submitForm('delete', '{{ $fetched_data[$i]->id }}')" >Delete</button>
+        <br />
         
-            @endif
-        @endfor
+                @endif
+                
+            @endfor
+            
+        <form id="edit_pet_form" method="post" action="/pets/update">@csrf
+            
+        </form>
+        
+        <form id="delete_pet_form" method="post" action="/pets/delete">@csrf
+            <input type="hidden" id="delete_pet_id" name="delete_pet_id" value="" />
+        </form>
+        
+        @endif
+        
     @endif
     
     </div>
